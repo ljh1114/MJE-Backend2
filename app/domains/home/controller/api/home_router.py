@@ -7,7 +7,7 @@ from app.domains.home.repository.mysql_home_event_repository import MysqlHomeEve
 from app.domains.home.service.usecase.record_home_event_usecase import RecordHomeEventUseCase
 from app.infrastructure.database.database import get_db
 
-router = APIRouter(prefix="/api/v1/home", tags=["home"])
+router = APIRouter(prefix="/home", tags=["home"])
 
 
 @router.post("/events", response_model=HomeEventResponseForm, status_code=200)
