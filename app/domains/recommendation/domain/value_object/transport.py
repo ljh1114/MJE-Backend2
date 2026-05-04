@@ -9,8 +9,8 @@ class Transport(Enum):
     @property
     def base_move_minutes(self) -> int:
         _move_times = {
-            Transport.WALK: 20,
-            Transport.PUBLIC_TRANSIT: 15,
-            Transport.CAR: 10,
+            Transport.WALK: 15,
+            Transport.PUBLIC_TRANSIT: 25,
+            Transport.CAR: 30,
         }
         return _move_times[self]
