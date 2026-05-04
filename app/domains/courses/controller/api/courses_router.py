@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends
 
+from app.domains.courses.controller.api.request_form.course_event_request_form import (
+    CourseEventRequestForm,
+)
 from app.domains.courses.controller.api.request_form.create_recommendation_request_form import (
     CreateRecommendationRequestForm,
 )
@@ -16,7 +19,7 @@ from app.domains.courses.service.usecase.create_course_recommendations_usecase i
 )
 from app.domains.courses.service.usecase.get_course_detail_usecase import GetCourseDetailUseCase
 
-router = APIRouter(prefix="/api/v1/courses", tags=["courses"])
+router = APIRouter(prefix="/courses", tags=["courses"])
 
 
 def _get_create_recommendations_usecase(
@@ -29,6 +32,11 @@ def _get_course_detail_usecase(
     repository: CourseRepositoryInterface = Depends(get_course_repository),
 ) -> GetCourseDetailUseCase:
     return GetCourseDetailUseCase(repository)
+
+
+@router.post("/events", status_code=200)
+def record_course_event(form: CourseEventRequestForm) -> dict:
+    return {"success": True}
 
 
 @router.post("/recommendations", response_model=CreateRecommendationResponseForm)

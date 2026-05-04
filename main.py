@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.common.exception_handler import register_exception_handlers
 from app.domains.courses.controller.api.courses_router import router as courses_router
+from app.domains.home.controller.api.home_router import router as home_router
+from app.domains.recommendation.controller.api.recommendation_router import router as recommendation_router
 from app.infrastructure.cache.redis_client import close_redis
 from app.infrastructure.config.config import settings
 from app.infrastructure.database.database import Base, engine
@@ -34,7 +36,9 @@ app.add_middleware(
 
 register_exception_handlers(app)
 
+app.include_router(home_router)
 app.include_router(courses_router)
+app.include_router(recommendation_router, prefix="/api/v1")
 
 
 @app.get("/health")
