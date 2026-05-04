@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.common.exception_handler import register_exception_handlers
+from app.domains.courses.controller.api.courses_router import router as courses_router
 from app.infrastructure.cache.redis_client import close_redis
 from app.infrastructure.config.config import settings
 from app.infrastructure.database.database import Base, engine
@@ -12,10 +13,7 @@ from app.infrastructure.database.database import Base, engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
-    await engine.dispose()
     await close_redis()
 
 
@@ -35,6 +33,8 @@ app.add_middleware(
 )
 
 register_exception_handlers(app)
+
+app.include_router(courses_router)
 
 
 @app.get("/health")
