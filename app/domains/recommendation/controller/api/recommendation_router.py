@@ -9,9 +9,9 @@ from app.domains.recommendation.controller.api.response_form.get_course_detail_r
 from app.domains.recommendation.controller.api.response_form.get_recommendation_response_form import (
     GetRecommendationResponseForm,
 )
-from app.domains.recommendation.repository.in_memory_recommendation_session_repository import (
+from app.domains.recommendation.repository.redis_recommendation_session_repository import (
+    RedisRecommendationSessionRepository,
     get_recommendation_session_repository,
-    InMemoryRecommendationSessionRepository,
 )
 from app.domains.recommendation.repository.recommendation_session_repository_interface import (
     RecommendationSessionRepositoryInterface,
@@ -27,8 +27,8 @@ from app.domains.recommendation.service.usecase.get_recommendation_usecase impor
 router = APIRouter(prefix="/courses", tags=["recommendation"])
 
 
-def _get_session_repository(
-    repository: InMemoryRecommendationSessionRepository = Depends(get_recommendation_session_repository),
+async def _get_session_repository(
+    repository: RedisRecommendationSessionRepository = Depends(get_recommendation_session_repository),
 ) -> RecommendationSessionRepositoryInterface:
     return repository
 
@@ -46,20 +46,20 @@ def _get_course_detail_usecase(
 
 
 @router.post("/recommendations", response_model=GetRecommendationResponseForm)
-def get_recommendations(
+async def get_recommendations(
     form: GetRecommendationRequestForm,
     usecase: GetRecommendationUseCase = Depends(_get_recommendation_usecase),
 ) -> GetRecommendationResponseForm:
     dto = form.to_request()
-    result = usecase.execute(dto)
+    result = await usecase.execute(dto)
     return GetRecommendationResponseForm.from_response(result)
 
 
 @router.get("/recommendations/{course_id}", response_model=GetCourseDetailResponseForm)
-def get_course_detail(
+async def get_course_detail(
     course_id: str,
     usecase: GetCourseDetailUseCase = Depends(_get_course_detail_usecase),
 ) -> GetCourseDetailResponseForm:
     dto = GetCourseDetailRequestDto(course_id=course_id)
-    result = usecase.execute(dto)
+    result = await usecase.execute(dto)
     return GetCourseDetailResponseForm.from_response(result)

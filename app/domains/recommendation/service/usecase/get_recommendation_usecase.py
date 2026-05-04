@@ -41,7 +41,7 @@ class GetRecommendationUseCase:
     def __init__(self, session_repository: RecommendationSessionRepositoryInterface) -> None:
         self._session_repository = session_repository
 
-    def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
+    async def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
         collected_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         courses = []
 
@@ -65,7 +65,7 @@ class GetRecommendationUseCase:
 
         response = GetRecommendationResponseDto(courses=courses, shortage_reasons=[])
 
-        self._session_repository.save(
+        await self._session_repository.save(
             RecommendationSessionDto(
                 area=dto.area,
                 start_time=dto.start_time,

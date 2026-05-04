@@ -50,11 +50,11 @@ class GetCourseDetailUseCase:
     def __init__(self, repository: RecommendationSessionRepositoryInterface) -> None:
         self._repository = repository
 
-    def execute(self, dto: GetCourseDetailRequestDto) -> GetCourseDetailResponseDto:
+    async def execute(self, dto: GetCourseDetailRequestDto) -> GetCourseDetailResponseDto:
         if not dto.course_id:
             raise NotFoundError("course_id is required")
 
-        session = self._repository.find_by_course_id(dto.course_id)
+        session = await self._repository.find_by_course_id(dto.course_id)
         if session is None:
             raise NotFoundError(f"course_id '{dto.course_id}' not found or expired")
 
