@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     MYSQL_SCHEMA: str
     REDIS_URL: str = "redis://localhost:6379"
     CORS_ORIGINS: list[str] = []
+    NAVER_SEARCH_CLIENT_ID: str = ""
+    NAVER_SEARCH_CLIENT_SECRET: str = ""
+    NAVER_DATALAB_CLIENT_ID: str = ""
+    NAVER_DATALAB_CLIENT_SECRET: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
