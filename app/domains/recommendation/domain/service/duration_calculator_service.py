@@ -30,8 +30,19 @@ class DurationCalculatorService:
         start_time: str,
         transport: Transport,
     ) -> DurationResult:
+        return self.calculate_for_places(
+            [candidate.restaurant, candidate.cafe, candidate.activity],
+            start_time,
+            transport,
+        )
+
+    def calculate_for_places(
+        self,
+        places: List[CandidatePlace],
+        start_time: str,
+        transport: Transport,
+    ) -> DurationResult:
         move_time = transport.base_move_minutes
-        places = [candidate.restaurant, candidate.cafe, candidate.activity]
         schedules: List[PlaceSchedule] = []
         current_time = start_time
 
