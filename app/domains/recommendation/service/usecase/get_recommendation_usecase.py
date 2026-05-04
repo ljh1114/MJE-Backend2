@@ -2,6 +2,10 @@ import uuid
 from datetime import datetime
 
 from app.domains.recommendation.domain.value_object.recommendation_place import RecommendationPlace
+from app.domains.recommendation.repository.recommendation_session_repository_interface import (
+    RecommendationSessionRepositoryInterface,
+)
+from app.domains.recommendation.service.dto.recommendation_session_dto import RecommendationSessionDto
 from app.domains.recommendation.service.dto.request.get_recommendation_request_dto import (
     GetRecommendationRequestDto,
 )
@@ -34,6 +38,9 @@ _MOCK_TEMPLATES = [
 
 
 class GetRecommendationUseCase:
+    def __init__(self, session_repository: RecommendationSessionRepositoryInterface) -> None:
+        self._session_repository = session_repository
+
     def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
         collected_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         courses = []
@@ -56,7 +63,18 @@ class GetRecommendationUseCase:
                 )
             )
 
-        return GetRecommendationResponseDto(courses=courses, shortage_reasons=[])
+        response = GetRecommendationResponseDto(courses=courses, shortage_reasons=[])
+
+        self._session_repository.save(
+            RecommendationSessionDto(
+                area=dto.area,
+                start_time=dto.start_time,
+                transport=dto.transport,
+                courses=courses,
+            )
+        )
+
+        return response
 
     def _build_place(self, place_id: int, area: str, template: dict, collected_at: str) -> RecommendationPlace:
         return RecommendationPlace(
