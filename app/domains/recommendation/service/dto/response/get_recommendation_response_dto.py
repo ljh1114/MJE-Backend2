@@ -15,6 +15,7 @@ class RecommendationPlaceDto:
     telephone: str
     keyword: str
     collected_at: str
+    image_url: str = ""
 
 
 @dataclass
@@ -24,6 +25,7 @@ class RecommendationCourseItemDto:
     restaurant: RecommendationPlaceDto
     cafe: RecommendationPlaceDto
     activity: RecommendationPlaceDto
+    image_url: str = ""
 
 
 @dataclass

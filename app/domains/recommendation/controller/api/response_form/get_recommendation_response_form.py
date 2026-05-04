@@ -19,6 +19,7 @@ class RecommendationPlaceResponseForm(BaseModel):
     telephone: str
     keyword: str
     collected_at: str
+    image_url: str
 
 
 class RecommendationCourseItemResponseForm(BaseModel):
@@ -27,6 +28,7 @@ class RecommendationCourseItemResponseForm(BaseModel):
     restaurant: RecommendationPlaceResponseForm
     cafe: RecommendationPlaceResponseForm
     activity: RecommendationPlaceResponseForm
+    image_url: str
 
 
 class GetRecommendationResponseForm(BaseModel):
@@ -42,6 +44,7 @@ class GetRecommendationResponseForm(BaseModel):
                 restaurant=RecommendationPlaceResponseForm(**vars(item.restaurant)),
                 cafe=RecommendationPlaceResponseForm(**vars(item.cafe)),
                 activity=RecommendationPlaceResponseForm(**vars(item.activity)),
+                image_url=item.image_url,
             )
             for item in dto.courses
         ]
