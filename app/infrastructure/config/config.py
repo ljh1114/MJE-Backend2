@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     NAVER_SEARCH_CLIENT_SECRET: str = ""
     NAVER_DATALAB_CLIENT_ID: str = ""
     NAVER_DATALAB_CLIENT_SECRET: str = ""
+    NAVER_MAP_CLIENT_ID: str = ""
+    NAVER_MAP_CLIENT_SECRET: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
