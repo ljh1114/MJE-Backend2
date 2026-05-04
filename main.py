@@ -8,6 +8,7 @@ from app.common.exception_handler import register_exception_handlers
 from app.domains.courses.controller.api.courses_router import router as courses_router
 from app.domains.home.controller.api.home_router import router as home_router
 from app.domains.recommendation.controller.api.recommendation_router import router as recommendation_router
+from app.infrastructure.api.email.email_router import router as email_router
 from app.infrastructure.api.export_logs.export_log_router import router as export_log_router
 from app.infrastructure.cache.redis_client import close_redis
 from app.infrastructure.config.config import settings
@@ -41,6 +42,7 @@ app.include_router(home_router)
 app.include_router(courses_router)
 app.include_router(recommendation_router, prefix="/api/v1")
 app.include_router(export_log_router)
+app.include_router(email_router)
 
 
 @app.get("/health")

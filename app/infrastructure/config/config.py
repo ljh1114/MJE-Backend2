@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     NAVER_DATALAB_CLIENT_SECRET: str = ""
     NAVER_MAP_CLIENT_ID: str = ""
     NAVER_MAP_CLIENT_SECRET: str = ""
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = ""
+    SERVICE_NAME: str = "MJE"
 
     model_config = SettingsConfigDict(
         env_file=".env",
