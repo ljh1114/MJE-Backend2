@@ -40,7 +40,7 @@ register_exception_handlers(app)
 
 app.include_router(home_router)
 app.include_router(courses_router)
-app.include_router(recommendation_router, prefix="/api/v1")
+app.include_router(recommendation_router)
 app.include_router(export_log_router)
 app.include_router(email_router)
 
