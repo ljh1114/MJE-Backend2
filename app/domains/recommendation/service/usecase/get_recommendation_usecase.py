@@ -72,7 +72,7 @@ class GetRecommendationUseCase:
             shortage_reasons.append("조건에 맞는 추천 코스를 만들지 못했어요. 다른 지역이나 시간대로 다시 시도해 보세요.")
 
         response = self._mapper.to_response_dto(best, optionals, shortage_reasons)
-        response = self._image_enricher.execute(response, dto.area)
+        response = await self._image_enricher.execute(response, dto.area)
 
         if response.courses:
             await self._session_repository.save(
