@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 from app.domains.recommendation.domain.service.course_candidate_generator_service import (
     CourseCandidateGeneratorService,
@@ -10,6 +11,7 @@ from app.domains.recommendation.domain.value_object.transport import Transport
 from app.domains.recommendation.repository.recommendation_session_repository_interface import (
     RecommendationSessionRepositoryInterface,
 )
+from app.domains.recommendation.service.candidate_cache_interface import CandidateCacheInterface
 from app.domains.recommendation.service.dto.recommendation_session_dto import RecommendationSessionDto
 from app.domains.recommendation.service.dto.request.get_recommendation_request_dto import (
     GetRecommendationRequestDto,
@@ -36,6 +38,7 @@ class GetRecommendationUseCase:
         session_repository: RecommendationSessionRepositoryInterface,
         search_client: SearchClientInterface,
         image_search_client: ImageSearchClientInterface,
+        candidate_cache: Optional[CandidateCacheInterface] = None,
     ) -> None:
         self._session_repository = session_repository
         self._collector = PlaceCandidateCollector(search_client)
@@ -44,9 +47,17 @@ class GetRecommendationUseCase:
         self._selector = CourseSelectorService()
         self._mapper = RecommendationResponseMapper()
         self._image_enricher = EnrichCourseImagesUseCase(image_search_client)
+        self._candidate_cache = candidate_cache
 
     async def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
-        collection = await self._collector.collect(dto.area)
+        collection = None
+        if self._candidate_cache:
+            collection = await self._candidate_cache.get(dto.area)
+
+        if collection is None:
+            collection = await self._collector.collect(dto.area)
+            if self._candidate_cache:
+                asyncio.create_task(self._candidate_cache.set(dto.area, collection))
         candidates, candidate_shortages = self._candidate_generator.generate(
             collection.restaurants,
             collection.cafes,

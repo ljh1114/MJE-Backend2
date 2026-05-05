@@ -25,6 +25,8 @@ from app.domains.recommendation.service.usecase.get_recommendation_usecase impor
 )
 from app.infrastructure.api.image_search.naver_image_search_client import NaverImageSearchClient
 from app.infrastructure.api.search.naver_search_client import NaverSearchClient
+from app.infrastructure.cache.redis_candidate_cache import RedisCandidateCache
+from app.infrastructure.cache.redis_client import get_redis
 from app.infrastructure.config.config import settings
 
 router = APIRouter(prefix="/courses", tags=["recommendation"])
@@ -36,7 +38,7 @@ async def _get_session_repository(
     return repository
 
 
-def _get_recommendation_usecase(
+async def _get_recommendation_usecase(
     repository: RecommendationSessionRepositoryInterface = Depends(_get_session_repository),
 ) -> GetRecommendationUseCase:
     search_client = NaverSearchClient(
@@ -47,10 +49,13 @@ def _get_recommendation_usecase(
         client_id=settings.NAVER_SEARCH_CLIENT_ID,
         client_secret=settings.NAVER_SEARCH_CLIENT_SECRET,
     )
+    redis_client = await get_redis()
+    candidate_cache = RedisCandidateCache(redis_client)
     return GetRecommendationUseCase(
         session_repository=repository,
         search_client=search_client,
         image_search_client=image_search_client,
+        candidate_cache=candidate_cache,
     )
 
 
