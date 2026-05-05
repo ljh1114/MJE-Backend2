@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from app.domains.recommendation.domain.service.image_relevance_service import ImageRelevanceService
@@ -22,17 +23,28 @@ class EnrichCourseImagesUseCase:
         self._client = image_search_client
         self._relevance_service = ImageRelevanceService()
 
-    def execute(self, dto: GetRecommendationResponseDto, area: str) -> GetRecommendationResponseDto:
+    async def execute(self, dto: GetRecommendationResponseDto, area: str) -> GetRecommendationResponseDto:
+        loop = asyncio.get_running_loop()
+
+        # 모든 코스의 모든 장소 이미지를 동시에 검색
+        place_tasks = [
+            (course, place, label)
+            for course in dto.courses
+            for place, label in [
+                (course.restaurant, "restaurant"),
+                (course.cafe, "cafe"),
+                (course.activity, "activity"),
+            ]
+        ]
+        await asyncio.gather(*[
+            loop.run_in_executor(None, self._enrich_place, place, label, area)
+            for _, place, label in place_tasks
+        ])
+
         for course in dto.courses:
-            self._enrich_course(course, area)
+            course.image_url = self._select_representative(course, area)
+
         return dto
-
-    def _enrich_course(self, course: RecommendationCourseItemDto, area: str) -> None:
-        self._enrich_place(course.restaurant, "restaurant", area)
-        self._enrich_place(course.cafe, "cafe", area)
-        self._enrich_place(course.activity, "activity", area)
-
-        course.image_url = self._select_representative(course, area)
 
     def _enrich_place(self, place: RecommendationPlaceDto, place_type_label: str, area: str) -> None:
         try:

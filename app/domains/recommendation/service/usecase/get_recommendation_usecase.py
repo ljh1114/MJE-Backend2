@@ -44,7 +44,7 @@ class GetRecommendationUseCase:
         self._image_enricher = EnrichCourseImagesUseCase(image_search_client)
 
     async def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
-        collection = self._collector.collect(dto.area)
+        collection = await self._collector.collect(dto.area)
         candidates, candidate_shortages = self._candidate_generator.generate(
             collection.restaurants,
             collection.cafes,
