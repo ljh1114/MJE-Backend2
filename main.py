@@ -1,7 +1,13 @@
+import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.common.exception_handler import register_exception_handlers
