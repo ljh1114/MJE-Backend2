@@ -7,9 +7,9 @@ from app.domains.recommendation.domain.value_object.place_schedule import PlaceS
 from app.domains.recommendation.domain.value_object.place_type import PlaceType
 from app.domains.recommendation.domain.value_object.transport import Transport
 
-_TARGET_MIN = 300
+_TARGET_MIN = 270
 _TARGET_MAX = 360
-_ALLOW_MIN = 270
+_ALLOW_MIN = 220
 _ALLOW_MAX = 420
 
 _DEFAULT_ACTIVITY_DURATION = 120
