@@ -23,6 +23,9 @@ from app.domains.recommendation.service.usecase.get_course_detail_usecase import
 from app.domains.recommendation.service.usecase.get_recommendation_usecase import (
     GetRecommendationUseCase,
 )
+from app.infrastructure.api.image_search.naver_image_search_client import NaverImageSearchClient
+from app.infrastructure.api.search.naver_search_client import NaverSearchClient
+from app.infrastructure.config.config import settings
 
 router = APIRouter(prefix="/courses", tags=["recommendation"])
 
@@ -36,7 +39,19 @@ async def _get_session_repository(
 def _get_recommendation_usecase(
     repository: RecommendationSessionRepositoryInterface = Depends(_get_session_repository),
 ) -> GetRecommendationUseCase:
-    return GetRecommendationUseCase(session_repository=repository)
+    search_client = NaverSearchClient(
+        client_id=settings.NAVER_SEARCH_CLIENT_ID,
+        client_secret=settings.NAVER_SEARCH_CLIENT_SECRET,
+    )
+    image_search_client = NaverImageSearchClient(
+        client_id=settings.NAVER_SEARCH_CLIENT_ID,
+        client_secret=settings.NAVER_SEARCH_CLIENT_SECRET,
+    )
+    return GetRecommendationUseCase(
+        session_repository=repository,
+        search_client=search_client,
+        image_search_client=image_search_client,
+    )
 
 
 def _get_course_detail_usecase(

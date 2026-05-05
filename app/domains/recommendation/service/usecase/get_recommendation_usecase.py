@@ -1,7 +1,10 @@
-import uuid
-from datetime import datetime
-
-from app.domains.recommendation.domain.value_object.recommendation_place import RecommendationPlace
+from app.domains.recommendation.domain.service.course_candidate_generator_service import (
+    CourseCandidateGeneratorService,
+)
+from app.domains.recommendation.domain.service.course_ordering_service import CourseOrderingService
+from app.domains.recommendation.domain.service.course_selector_service import CourseSelectorService
+from app.domains.recommendation.domain.value_object.time_slot import TimeSlot
+from app.domains.recommendation.domain.value_object.transport import Transport
 from app.domains.recommendation.repository.recommendation_session_repository_interface import (
     RecommendationSessionRepositoryInterface,
 )
@@ -11,97 +14,74 @@ from app.domains.recommendation.service.dto.request.get_recommendation_request_d
 )
 from app.domains.recommendation.service.dto.response.get_recommendation_response_dto import (
     GetRecommendationResponseDto,
-    RecommendationCourseItemDto,
-    RecommendationPlaceDto,
 )
-
-_MOCK_TEMPLATES = [
-    {
-        "grade": "best",
-        "restaurant": {"name": "한우 명가", "category": "음식점 > 한식 > 소고기,돼지고기", "keyword": "한우 맛집 데이트"},
-        "cafe": {"name": "루프탑 카페", "category": "카페 > 커피전문점", "keyword": "루프탑 데이트 카페"},
-        "activity": {"name": "VR 체험관", "category": "레저 > 오락 > VR체험", "keyword": "커플 VR 체험"},
-    },
-    {
-        "grade": "optional",
-        "restaurant": {"name": "스시 오마카세", "category": "음식점 > 일식 > 초밥,롤", "keyword": "오마카세 데이트"},
-        "cafe": {"name": "브런치 카페", "category": "카페 > 브런치", "keyword": "분위기 좋은 카페"},
-        "activity": {"name": "볼링장", "category": "레저 > 스포츠 > 볼링장", "keyword": "커플 볼링"},
-    },
-    {
-        "grade": "optional",
-        "restaurant": {"name": "이탈리안 레스토랑", "category": "음식점 > 양식 > 이탈리안", "keyword": "파스타 데이트"},
-        "cafe": {"name": "디저트 카페", "category": "카페 > 디저트", "keyword": "케이크 카페"},
-        "activity": {"name": "방탈출 카페", "category": "레저 > 오락 > 방탈출카페", "keyword": "커플 방탈출"},
-    },
-]
+from app.domains.recommendation.service.image_search_client_interface import (
+    ImageSearchClientInterface,
+)
+from app.domains.recommendation.service.mapper.recommendation_response_mapper import (
+    RecommendationResponseMapper,
+)
+from app.domains.recommendation.service.place_candidate_collector import PlaceCandidateCollector
+from app.domains.recommendation.service.search_client_interface import SearchClientInterface
+from app.domains.recommendation.service.usecase.enrich_course_images_usecase import (
+    EnrichCourseImagesUseCase,
+)
 
 
 class GetRecommendationUseCase:
-    def __init__(self, session_repository: RecommendationSessionRepositoryInterface) -> None:
+    def __init__(
+        self,
+        session_repository: RecommendationSessionRepositoryInterface,
+        search_client: SearchClientInterface,
+        image_search_client: ImageSearchClientInterface,
+    ) -> None:
         self._session_repository = session_repository
+        self._collector = PlaceCandidateCollector(search_client)
+        self._candidate_generator = CourseCandidateGeneratorService()
+        self._ordering_service = CourseOrderingService()
+        self._selector = CourseSelectorService()
+        self._mapper = RecommendationResponseMapper()
+        self._image_enricher = EnrichCourseImagesUseCase(image_search_client)
 
     async def execute(self, dto: GetRecommendationRequestDto) -> GetRecommendationResponseDto:
-        collected_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        courses = []
+        collection = self._collector.collect(dto.area)
+        candidates, candidate_shortages = self._candidate_generator.generate(
+            collection.restaurants,
+            collection.cafes,
+            collection.activities,
+        )
 
-        for idx, template in enumerate(_MOCK_TEMPLATES):
-            course_id = str(uuid.uuid4())
-            base_id = (idx + 1) * 100
+        transport = Transport(dto.transport)
+        ordered_results = [
+            self._ordering_service.apply_order(candidate, dto.start_time, transport)
+            for candidate in candidates
+        ]
+        valid_results = [result for result in ordered_results if result.is_valid]
 
-            restaurant = self._build_place(base_id + 1, dto.area, template["restaurant"], collected_at)
-            cafe = self._build_place(base_id + 2, dto.area, template["cafe"], collected_at)
-            activity = self._build_place(base_id + 3, dto.area, template["activity"], collected_at)
+        best, optionals = self._selector.select(
+            valid_results,
+            TimeSlot.from_start_time(dto.start_time),
+            transport,
+        )
 
-            courses.append(
-                RecommendationCourseItemDto(
-                    course_id=course_id,
-                    grade=template["grade"],
-                    restaurant=self._to_dto(restaurant),
-                    cafe=self._to_dto(cafe),
-                    activity=self._to_dto(activity),
+        shortage_reasons = [
+            *collection.shortage_reasons,
+            *candidate_shortages,
+        ]
+        if not valid_results:
+            shortage_reasons.append("조건에 맞는 추천 코스를 만들지 못했어요. 다른 지역이나 시간대로 다시 시도해 보세요.")
+
+        response = self._mapper.to_response_dto(best, optionals, shortage_reasons)
+        response = self._image_enricher.execute(response, dto.area)
+
+        if response.courses:
+            await self._session_repository.save(
+                RecommendationSessionDto(
+                    area=dto.area,
+                    start_time=dto.start_time,
+                    transport=dto.transport,
+                    courses=response.courses,
                 )
             )
 
-        response = GetRecommendationResponseDto(courses=courses, shortage_reasons=[])
-
-        await self._session_repository.save(
-            RecommendationSessionDto(
-                area=dto.area,
-                start_time=dto.start_time,
-                transport=dto.transport,
-                courses=courses,
-            )
-        )
-
         return response
-
-    def _build_place(self, place_id: int, area: str, template: dict, collected_at: str) -> RecommendationPlace:
-        return RecommendationPlace(
-            id=place_id,
-            name=f"{area} {template['name']}",
-            category=template["category"],
-            road_address=f"서울 {area} 테헤란로 {place_id}길 {place_id}",
-            address=f"서울 {area}",
-            mapx="127.0276",
-            mapy="37.4979",
-            link="",
-            telephone="02-1234-5678",
-            keyword=template["keyword"],
-            collected_at=collected_at,
-        )
-
-    def _to_dto(self, place: RecommendationPlace) -> RecommendationPlaceDto:
-        return RecommendationPlaceDto(
-            id=place.id,
-            name=place.name,
-            category=place.category,
-            road_address=place.road_address,
-            address=place.address,
-            mapx=place.mapx,
-            mapy=place.mapy,
-            link=place.link,
-            telephone=place.telephone,
-            keyword=place.keyword,
-            collected_at=place.collected_at,
-        )
