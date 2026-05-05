@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -15,7 +15,7 @@ class RecommendationPlaceDto:
     telephone: str
     keyword: str
     collected_at: str
-    image_url: str = ""
+    image_url: Optional[str] = None
 
 
 @dataclass
@@ -25,7 +25,7 @@ class RecommendationCourseItemDto:
     restaurant: RecommendationPlaceDto
     cafe: RecommendationPlaceDto
     activity: RecommendationPlaceDto
-    image_url: str = ""
+    image_url: Optional[str] = None
 
 
 @dataclass

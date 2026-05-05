@@ -16,7 +16,7 @@ class CourseDetailPlaceDto:
     link: str
     telephone: str
     keyword: str
-    image_url: str
+    image_url: Optional[str]
     start_time: str
     end_time: str
     duration_minutes: int

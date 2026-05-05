@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -19,7 +19,7 @@ class RecommendationPlaceResponseForm(BaseModel):
     telephone: str
     keyword: str
     collected_at: str
-    image_url: str
+    image_url: Optional[str]
 
 
 class RecommendationCourseItemResponseForm(BaseModel):
@@ -28,7 +28,7 @@ class RecommendationCourseItemResponseForm(BaseModel):
     restaurant: RecommendationPlaceResponseForm
     cafe: RecommendationPlaceResponseForm
     activity: RecommendationPlaceResponseForm
-    image_url: str
+    image_url: Optional[str]
 
 
 class GetRecommendationResponseForm(BaseModel):

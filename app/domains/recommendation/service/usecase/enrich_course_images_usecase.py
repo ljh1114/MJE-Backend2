@@ -11,9 +11,9 @@ from app.domains.recommendation.service.image_search_client_interface import (
 )
 
 _FALLBACK_IMAGES = {
-    "restaurant": "",
-    "cafe": "",
-    "activity": "",
+    "restaurant": None,
+    "cafe": None,
+    "activity": None,
 }
 
 
@@ -48,16 +48,16 @@ class EnrichCourseImagesUseCase:
         except Exception:
             pass
 
-        place.image_url = _FALLBACK_IMAGES.get(place_type_label, "")
+        place.image_url = _FALLBACK_IMAGES.get(place_type_label)
 
-    def _select_representative(self, course: RecommendationCourseItemDto, area: str) -> str:
+    def _select_representative(self, course: RecommendationCourseItemDto, area: str) -> str | None:
         candidates = [
             (course.restaurant.image_url, course.restaurant.name, course.restaurant.category, course.restaurant.keyword),
             (course.cafe.image_url, course.cafe.name, course.cafe.category, course.cafe.keyword),
             (course.activity.image_url, course.activity.name, course.activity.category, course.activity.keyword),
         ]
         course_keywords = _build_course_keywords(course, area)
-        return self._relevance_service.select_representative_image(candidates, course_keywords) or ""
+        return self._relevance_service.select_representative_image(candidates, course_keywords) or None
 
 
 def _build_course_keywords(course: RecommendationCourseItemDto, area: str) -> List[str]:

@@ -23,7 +23,7 @@ class RecommendationSessionDto:
                 restaurant=RecommendationPlaceDto(**item["restaurant"]),
                 cafe=RecommendationPlaceDto(**item["cafe"]),
                 activity=RecommendationPlaceDto(**item["activity"]),
-                image_url=item.get("image_url", ""),
+                image_url=item.get("image_url"),
             )
             for item in data.get("courses", [])
         ]
