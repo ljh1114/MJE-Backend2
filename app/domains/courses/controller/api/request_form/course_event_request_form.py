@@ -1,4 +1,6 @@
-from pydantic import BaseModel, field_validator
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field, field_validator
 
 from app.domains.courses.domain.events.courses_event import CoursesEventType
 from app.domains.courses.service.dto.request.record_courses_event_request_dto import RecordCoursesEventRequestDto
@@ -7,8 +9,8 @@ from app.domains.courses.service.dto.request.record_courses_event_request_dto im
 class CourseEventRequestForm(BaseModel):
     event_name: str
     session_id: str
-    timestamp: str
-    page_path: str
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    page_path: str = ""
 
     @field_validator("event_name")
     @classmethod
