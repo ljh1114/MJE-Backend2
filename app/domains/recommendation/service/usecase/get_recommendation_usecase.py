@@ -1,3 +1,5 @@
+import asyncio
+
 from app.domains.recommendation.domain.service.course_candidate_generator_service import (
     CourseCandidateGeneratorService,
 )
@@ -75,12 +77,14 @@ class GetRecommendationUseCase:
         response = await self._image_enricher.execute(response, dto.area)
 
         if response.courses:
-            await self._session_repository.save(
-                RecommendationSessionDto(
-                    area=dto.area,
-                    start_time=dto.start_time,
-                    transport=dto.transport,
-                    courses=response.courses,
+            asyncio.create_task(
+                self._session_repository.save(
+                    RecommendationSessionDto(
+                        area=dto.area,
+                        start_time=dto.start_time,
+                        transport=dto.transport,
+                        courses=response.courses,
+                    )
                 )
             )
 
